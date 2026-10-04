@@ -1,0 +1,52 @@
+name: SuperKart MLOps CI/CD
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  HF_USERNAME: dinzprof
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  mlops:
+    runs-on: ubuntu-latest
+    env:
+      HF_TOKEN: \${{ secrets.HF_TOKEN }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: \${{ env.PYTHON_VERSION }}
+
+      - name: Install project dependencies
+        run: pip install -r requirements.txt
+
+      - name: Register data and prepare train/test
+        run: python -m src.data_prep
+
+      - name: Train, tune, evaluate and register model
+        run: python -m src.train
+
+      - name: Deploy Docker Space
+        run: python -m deployment.hosting
+
+      - name: Execute submission notebook and export HTML
+        run: |
+          jupyter nbconvert --to notebook --execute notebooks/SuperKart_MLOps_Pipeline.ipynb --output executed_SuperKart_MLOps_Pipeline.ipynb --ExecutePreprocessor.timeout=1200
+          jupyter nbconvert --to html executed_SuperKart_MLOps_Pipeline.ipynb --output notebooks/SuperKart_MLOps_Pipeline.html
+
+      - name: Commit refreshed pipeline outputs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/processed notebooks/SuperKart_MLOps_Pipeline.html executed_SuperKart_MLOps_Pipeline.ipynb
+          git diff --cached --quiet || git commit -m "chore: refresh SuperKart pipeline outputs [skip ci]"
+          git push origin HEAD:main
