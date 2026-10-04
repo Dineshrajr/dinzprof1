@@ -1,0 +1,52 @@
+{
+  "best_model": "RandomForest",
+  "results": {
+    "DecisionTree": {
+      "rmse": 299.0024516265581,
+      "mae": 134.2769609315423,
+      "r2": 0.9216468891366003,
+      "best_params": {
+        "model__max_depth": null,
+        "model__min_samples_leaf": 10
+      }
+    },
+    "Bagging": {
+      "rmse": 281.45576549722307,
+      "mae": 107.42861283513976,
+      "r2": 0.9305732166344496,
+      "best_params": {
+        "model__max_samples": 0.7,
+        "model__n_estimators": 100
+      }
+    },
+    "RandomForest": {
+      "rmse": 280.5457512912393,
+      "mae": 105.97956059159925,
+      "r2": 0.9310214378459972,
+      "best_params": {
+        "model__max_depth": null,
+        "model__min_samples_leaf": 5,
+        "model__n_estimators": 200
+      }
+    },
+    "AdaBoost": {
+      "rmse": 467.6461623043891,
+      "mae": 362.7933853573257,
+      "r2": 0.8083355819451781,
+      "best_params": {
+        "model__learning_rate": 0.05,
+        "model__n_estimators": 100
+      }
+    },
+    "GradientBoosting": {
+      "rmse": 291.01907402709463,
+      "mae": 128.34674767607495,
+      "r2": 0.9257750943006852,
+      "best_params": {
+        "model__learning_rate": 0.1,
+        "model__max_depth": 4,
+        "model__n_estimators": 200
+      }
+    }
+  }
+}

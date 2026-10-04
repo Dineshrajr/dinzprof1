@@ -1,0 +1,123 @@
+name: SuperKart MLOps Pipeline
+
+# Automated end-to-end pipeline: data registration -> data prep ->
+# model training/tuning/evaluation -> model registration -> deployment
+# to a Hugging Face Space. Runs on every push to main and can also be
+# triggered manually.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+env:
+  HF_TOKEN: ${{ secrets.HF_TOKEN }}
+  HF_USERNAME: ${{ secrets.HF_USERNAME }}
+
+jobs:
+  data-prep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Register raw data + build train/test splits
+        run: python -m src.data_prep
+
+      - name: Upload processed data artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: processed-data
+          path: data/processed/
+
+  train-and-register:
+    needs: data-prep
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Download processed data artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: processed-data
+          path: data/processed/
+
+      - name: Train, tune, evaluate, and register the best model
+        run: python -m src.train
+
+      - name: Upload model artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trained-model
+          path: |
+            data/processed/best_model.joblib
+            data/processed/metrics.json
+
+  deploy:
+    needs: train-and-register
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Download model artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: trained-model
+          path: data/processed/
+
+      - name: Deploy Streamlit app to Hugging Face Space
+        run: python -m deployment.hosting
+
+  commit-results:
+    needs: [data-prep, train-and-register]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Download model artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: trained-model
+          path: data/processed/
+
+      - name: Download processed data artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: processed-data
+          path: data/processed/
+
+      # Keeps main up to date with the latest run's metrics/train-test
+      # split so results are always reproducible straight from the repo.
+      - name: Commit updated pipeline outputs back to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/processed/metrics.json data/processed/train.csv data/processed/test.csv
+          git diff --cached --quiet || git commit -m "chore: update pipeline outputs [skip ci]"
+          git push origin HEAD:main
