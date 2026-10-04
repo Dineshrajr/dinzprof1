@@ -1,1 +1,0 @@
-Add a GitHub Actions repository secret named HF_TOKEN containing a Hugging Face token with WRITE permission. Then run the SuperKart MLOps CI/CD workflow from the Actions tab. It registers the dataset, trains/tunes/registers the model, deploys the Docker Space, generates the HTML notebook, and commits refreshed outputs to main.
