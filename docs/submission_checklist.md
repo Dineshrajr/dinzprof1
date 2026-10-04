@@ -1,0 +1,11 @@
+SuperKart submission checklist:
+- GitHub public repository
+- Hugging Face dataset registration
+- HF-first data preparation and train/test upload
+- Five approved regression models
+- Random Forest tuning and evaluation
+- HF model registration
+- Docker/Streamlit Space deployment
+- GitHub Actions CI/CD
+- Executed notebook and HTML export
+- Successful workflow and live Space screenshots
