@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.env
+data/processed/best_model.joblib
+.DS_Store
