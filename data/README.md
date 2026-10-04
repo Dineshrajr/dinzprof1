@@ -1,1 +1,0 @@
-SuperKart data directory. The CI/CD workflow obtains the canonical 8,763-row SuperKart CSV from Hugging Face, registers it in dinzprof/superkart-sales-data, and uploads the cleaned train/test splits there.
